@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity >=0.8.9;
+
+contract RussianRoulette 
+{
+    address[] private players;
+    address[] private losers;
+    uint256 private odds;
+    uint256 private playersTurn;
+    address private owner;
+    constructor()
+    {
+        owner=msg.sender;
+        playersTurn=0;
+    }
+    modifier isOwner()
+    {
+        require(msg.sender==owner,"Access denied");
+        _;
+    }
+    function play() public
+    {
+        if (random()==1)
+        {
+            lose(players[playersTurn]);
+        }
+        playersTurn++;
+    }
+    function changeOdds(uint256 newOdds) public isOwner 
+    {
+        odds = newOdds;
+    }
+    function addPlayer(address person) public
+    {
+        require(!isPlayer(person),"That person is already playing");
+        require(!isLoser(person),"L");
+        players.push(person);
+    }
+    function lose(address person) public
+    {
+        require(isPlayer(person),"Not playing is a winning move");
+        losers.push(person);
+        delete players;
+        playersTurn=0;
+    }
+    function random() public returns(uint256)
+    {
+        bytes memory seed = toBytes(uint(block.timestamp));
+        return (uint(keccak256(seed)))%odds+1;
+    }
+    function isPlayer(address person) private view returns (bool)
+    {
+        for(uint i=0;i<players.length;i++)
+        {
+            if(players[i]==person)
+            return true;
+        }
+        return false;
+    }
+    function isLoser(address person) private view returns (bool)
+    {
+        for(uint i=0;i<losers.length;i++)
+        {
+            if(losers[i]==person)
+            return true;
+        }
+        return false;
+    }
+    function toBytes(uint256 x) public returns (bytes memory b) 
+    {
+    b = new bytes(32);
+    assembly { mstore(add(b, 32), x) 
+        
+    }
+    }
+}
